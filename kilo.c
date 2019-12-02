@@ -139,18 +139,19 @@ void abFree(struct abuf *ab) {
 /*** input ***/
 void editorMoveCursor(char key) {
   switch (key) {
-    case 'a':
-      E.cx--;
-      break;
-    case 'd':
-      E.cx++;
-      break;
-    case 'w':
-      E.cy--;
-      break;
-    case 's':
-      E.cy++;
-      break;
+    case ARROW_LEFT:
+        E.cx--;
+        break;
+    case ARROW_RIGHT:
+        E.cx++;
+        break;
+    case ARROW_UP:
+        E.cy--;
+        break;
+    case ARROW_DOWN:
+        E.cy++;
+        break;
+
   }
 }
 
