@@ -60,11 +60,17 @@ void editorProcessKeypress() {
   }
 }
 
+/*** output ***/
+void editorRefreshScreen() {
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+}
+
 int main() {
     
     enableRawMode();
     while (1) {
         editorProcessKeypress();
+        editorRefreshScreen();
     }
     return 0;
 }
