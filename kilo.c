@@ -14,8 +14,8 @@ void enableRawMode() {
   tcgetattr(STDIN_FILENO, &orig_termios);
   atexit(disableRawMode);
   struct termios raw = orig_termios;
-  // disable Ctrl-S and Ctrl-Q
-  raw.c_iflag &= ~(IXON);
+  // disable Ctrl-S and Ctrl-Q and Fix Ctrl-M
+  raw.c_iflag &= ~(ICRNL | IXON);
   // disable ECHO Canonical Ctrl-C Ctrl-Z and Ctr-V
   raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
