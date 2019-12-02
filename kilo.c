@@ -10,7 +10,9 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 struct editorConfig {
-  struct termios orig_termios;
+    int screenrows;
+    int screencols;
+    struct termios orig_termios;
 };
 struct editorConfig E;
 
@@ -90,6 +92,11 @@ void editorDrawRows() {
   }
 }
 
+/*** init ***/
+void initEditor() {
+  if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
+}
+
 void editorRefreshScreen() {
     write(STDOUT_FILENO, "\x1b[2J", 4);
     write(STDOUT_FILENO, "\x1b[H", 3);
@@ -98,7 +105,7 @@ void editorRefreshScreen() {
 }
 
 int main() {
-    
+    initEditor();
     enableRawMode();
     while (1) {
         editorProcessKeypress();
