@@ -16,6 +16,7 @@ enum editorKey {
     ARROW_RIGHT,
     ARROW_UP,
     ARROW_DOWN,
+    DEL_KEY,
     HOME_KEY,
     END_KEY,
     PAGE_UP,
@@ -90,7 +91,9 @@ int editorReadKey() {
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN) die("read");
     }
-    if (c == '\x1b') {
+    if (c == '\x7F') {
+        return DEL_KEY;
+    } else if (c == '\x1b') {
         char seq[6];
         if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
         if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
@@ -201,6 +204,9 @@ void editorProcessKeypress() {
     case ARROW_LEFT:
     case ARROW_RIGHT:
         editorMoveCursor(c);
+        break;
+    case DEL_KEY:
+        printf("delete\r\n");
         break;
     case HOME_KEY:
       E.cx = 0;
