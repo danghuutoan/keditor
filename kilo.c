@@ -16,6 +16,8 @@ enum editorKey {
     ARROW_RIGHT,
     ARROW_UP,
     ARROW_DOWN,
+    HOME_KEY,
+    END_KEY,
     PAGE_UP,
     PAGE_DOWN
 };
@@ -92,7 +94,7 @@ int editorReadKey() {
         char seq[6];
         if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
         if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
-
+        printf("%x \r\n", seq[0]);
         if (seq[0] == '[') {
             switch (seq[1]) {
             case 'A': return ARROW_UP;
@@ -115,8 +117,14 @@ int editorReadKey() {
 
      
         return '\x1b';
+    } else if (c == 1) {
+        //  cmd + left arrow, using as HOME key
+        return HOME_KEY;
+    } else if (c == 5) {
+        //  cmd + right arrow, using as end key
+        return END_KEY;
     } else {
-        printf("%c\r\n", c);
+        printf("%x, %c\r\n", c, c);
         return c;
     }
 }
@@ -194,6 +202,12 @@ void editorProcessKeypress() {
     case ARROW_RIGHT:
         editorMoveCursor(c);
         break;
+    case HOME_KEY:
+      E.cx = 0;
+      break;
+    case END_KEY:
+      E.cx = E.screencols - 1;
+      break;
     case PAGE_UP:
     case PAGE_DOWN:
         {
