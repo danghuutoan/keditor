@@ -14,6 +14,7 @@
 /*** defines ***/
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define KILO_VERSION "0.0.1"
+#define KILO_TAB_STOP 8
 
 enum editorKey {
     ARROW_LEFT = 1000,
@@ -29,7 +30,9 @@ enum editorKey {
 
 typedef struct erow {
   int size;
+  int rsize;
   char *chars;
+  char * render;
 } erow;
 
 struct editorConfig {
@@ -86,6 +89,29 @@ void die(const char *s) {
 }
 
 /*** row operations ***/
+void editorUpdateRow(erow *row) {
+    int tabs = 0;
+    int j;
+    for (j = 0; j < row->size; j++)
+        if (row->chars[j] == '\t') tabs++;
+    
+    free(row->render);
+    row->render = malloc(row->size + tabs*(KILO_TAB_STOP - 1) + 1);
+
+    int idx = 0;
+    for (j = 0; j < row->size; j++) {
+        if (row->chars[j] == '\t') {
+            row->render[idx++] = ' ';
+            while (idx % KILO_TAB_STOP != 0) row->render[idx++] = ' ';
+        } else {
+            row->render[idx++] = row->chars[j];
+        }
+    }
+
+    row->render[idx] = '\0';
+    row->rsize = idx;
+}
+
 void editorAppendRow(char *s, size_t len) {
     E.row = realloc(E.row, sizeof(erow) * (E.numrows + 1));
     int at = E.numrows;
@@ -93,7 +119,10 @@ void editorAppendRow(char *s, size_t len) {
     E.row[at].chars = malloc(len + 1);
     memcpy(E.row[at].chars, s, len);
     E.row[at].chars[len] = '\0';
+    E.row[at].rsize = 0;
+    E.row[at].render = NULL;
     E.numrows++;
+    editorUpdateRow(&E.row[at]);
 }
 
 /*** file i/o ***/
@@ -156,7 +185,7 @@ int editorReadKey() {
         char seq[6];
         if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
         if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
-        printf("%x \r\n", seq[0]);
+        // printf("%x \r\n", seq[0]);
         if (seq[0] == '[') {
             switch (seq[1]) {
             case 'A': return ARROW_UP;
@@ -186,7 +215,7 @@ int editorReadKey() {
         //  cmd + right arrow, using as end key
         return END_KEY;
     } else {
-        printf("%x, %c\r\n", c, c);
+        // printf("%x, %c\r\n", c, c);
         return c;
     }
 }
@@ -277,7 +306,7 @@ void editorProcessKeypress() {
         editorMoveCursor(c);
         break;
     case DEL_KEY:
-        printf("delete\r\n");
+        // printf("delete\r\n");
         break;
     case HOME_KEY:
       E.cx = 0;
@@ -321,10 +350,10 @@ void editorDrawRows(struct abuf *ab) {
             abAppend(ab, "~", 1);
         }
     } else {
-        int len = E.row[filerow].size - E.coloff;
+        int len = E.row[filerow].rsize - E.coloff;
         if (len < 0) len = 0;
         if (len > E.screencols) len = E.screencols;
-        abAppend(ab, &E.row[filerow].chars[E.coloff], len);
+        abAppend(ab, &E.row[filerow].render[E.coloff], len);
     }
     abAppend(ab, "\x1b[K", 3);
     if (y < E.screenrows - 1) {
